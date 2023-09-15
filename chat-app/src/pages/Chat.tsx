@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import io from "socket.io-client"
+import { useState, useEffect, useRef, RefObject  } from "react";
+import io from "socket.io-client";
+
 import { Message } from "../components/Message/message";
 import Rooms from "../components/Rooms/rooms";
 import CustomButton from "../components/button";
@@ -23,49 +24,50 @@ export interface UserI {
 export function Chat() {
   const [newMessage, setNewMessage] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
-  const [error, setError] = useState('')
-  const [selectedRoom, setSelectedRoom] = useState("")
-  const [user, setCurrentUser] = useState<UserI>()
+  const [error, setError] = useState("");
+  const [user, setCurrentUser] = useState<UserI>();
   const [rooms, setRooms] = useState<string[]>([]);
   const [messagesData, setMessagesHistory] = useState<MessagesI[]>([]);
   const scrollableDivRef = useRef<HTMLDivElement | null>(null);
+  const selectedRoom:RefObject<string | null> = useRef(null);
   const socket = useRef<any>(null);
 
   useEffect(() => {
-    socket.current = io("ws://localhost:4200/"); 
+    socket.current = io("ws://localhost:4200/");
     socket.current.on("ClientGetRooms", (roomData: string[]) => {
-      setRooms(roomData)
-      setError('')
+      setRooms(roomData);
+      setError("");
     });
     socket.current.on("ReciveMessage", (rcvMessage: MessagesI) => {
-      if (rcvMessage.roomName === selectedRoom) {
+      if (rcvMessage.roomName === selectedRoom.current) {
         setMessagesHistory((prevMessages) => [...prevMessages, rcvMessage]);
       }
     });
 
     socket.current.on("ClientGetRoomMessages", (roomData: MessagesI[]) => {
-      setMessagesHistory(roomData)
-      setError('')
+      setMessagesHistory(roomData);
+      setError("");
     });
 
     socket.current.on("errorMsg", (errorFromSocket: string) => {
-      setError(errorFromSocket)
-    })
+      setError(errorFromSocket);
+    });
 
-    const getUser = async() => {
+    const getUser = async () => {
       const user = await authService.getCurrentUser();
-      setCurrentUser(user)
-    }
+      setCurrentUser(user);
+    };
 
-    handleGetRooms()
-    getUser()
+    handleGetRooms();
+    getUser();
 
     return () => {
       if (socket.current) {
         socket.current.disconnect();
       }
     };
-  }, [])
+  }, []);
+
   useEffect(() => {
     if (scrollableDivRef.current) {
       scrollableDivRef.current.scrollTop =
@@ -75,7 +77,7 @@ export function Chat() {
 
   const handleGetRooms = () => {
     socket.current.emit("getRooms");
-  }
+  };
 
   const handleCreateRoom = () => {
     newGroupName && socket.current.emit("createRoom", newGroupName);
@@ -83,23 +85,22 @@ export function Chat() {
 
   const handleGetRoomMessages = (roomName: string) => {
     socket.current.emit("getRoomMessages", roomName);
-    setSelectedRoom(roomName)
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage || !user) return
+    if (!selectedRoom.current || !newMessage || !user) return;
 
     const newMessageInfo = {
-      roomName: selectedRoom,
+      roomName: selectedRoom.current,
       senderName: user.username,
       date: getCurrentTime(),
       text: newMessage,
-    }
+    };
     socket.current.emit("sendMessage", newMessageInfo);
-    setMessagesHistory([...messagesData, newMessageInfo])
+    setMessagesHistory([...messagesData, newMessageInfo]);
     setNewMessage("");
-  }
-console.log(messagesData)
+  };
+
   return (
     <div className="flex h-screen antialiased text-gray-800">
       <div className="flex flex-row h-full w-full overflow-x-hidden">
@@ -109,7 +110,7 @@ console.log(messagesData)
             <div className="flex flex-row items-center justify-between text-xs">
               <span className="font-bold">Active Rooms</span>
             </div>
-            <Rooms roomsData={rooms} roomOnClick={handleGetRoomMessages}/>
+            <Rooms roomsData={rooms} roomOnClick={handleGetRoomMessages} selectedRoom={selectedRoom}/>
             <hr />
             <div className="flex flex-col">
               <CustomInput

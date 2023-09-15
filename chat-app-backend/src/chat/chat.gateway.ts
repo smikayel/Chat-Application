@@ -25,13 +25,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private messages: MessagesI[] = [];
 
   handleConnection(client: Socket) {
-    // Handle connection event
-    // console.log(client);
+    console.log('Client connected to the socket');
   }
 
   handleDisconnect(client: Socket) {
-    // Handle disconnection event
-    // console.log(client);
+    console.log('Client dsconnected from socket');
   }
 
   @SubscribeMessage('getRooms')
@@ -47,7 +45,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: MessagesI,
     @ConnectedSocket() client: Socket,
   ) {
-    this.messages.push(data)
+    this.messages.push(data);
     client.broadcast.emit('ReciveMessage', data);
   }
 
@@ -56,6 +54,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() roomName: string,
     @ConnectedSocket() client: Socket,
   ) {
+    client.join(roomName);
     const roomMessages = this.messages.filter(
       (message) => message.roomName === roomName,
     );

@@ -11,7 +11,7 @@ const ProtectedRoutes: React.FC<ProtectedRouteProps> = ({
   const isAuthenticated = localStorage.getItem('user');
 
   if (!isAuthenticated) {
-    return <Navigate to="/sign-in" />;
+    return <Navigate to="/login" />;
   }
   return <>{children}</>;
 };

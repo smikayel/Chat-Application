@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { RefObject } from "react";
 
 const backgroundOptions = [
   "bg-red-500",
@@ -16,9 +16,14 @@ const backgroundOptions = [
 interface RoomsI {
   roomsData: string[];
   roomOnClick: (roomName: string) => void;
+  selectedRoom: any;
 }
 
-function Rooms({ roomsData, roomOnClick }: RoomsI) {
+function Rooms({ roomsData, roomOnClick, selectedRoom }: RoomsI) {
+  const handleSelection = (roomName: string) => {
+    roomOnClick(roomName);
+    selectedRoom.current = roomName;
+  };
   return (
     <div className="flex flex-col space-y-1 mt-4 -mx-2 h-80 overflow-y-auto">
       {roomsData.map((room) => {
@@ -31,7 +36,7 @@ function Rooms({ roomsData, roomOnClick }: RoomsI) {
           <button
             className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
             key={room}
-            onClick={() => roomOnClick(room)}
+            onClick={() => handleSelection(room)}
           >
             <div
               className={`flex items-center justify-center h-8 w-8 ${randomBackground} rounded-full`}
@@ -46,4 +51,4 @@ function Rooms({ roomsData, roomOnClick }: RoomsI) {
   );
 }
 
-export default memo(Rooms);
+export default Rooms;
